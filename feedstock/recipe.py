@@ -50,7 +50,6 @@ class Preprocess(beam.PTransform):
             long_name = 'SSEBOP Actual ET (ETa)',
             standard_name = 'ETa',
         )
-        #ds['aet'].attrs = {'scale_factor' : 1/1000},
         ds = ds.expand_dims(time=np.array([time]))
 
         return index, ds
@@ -65,6 +64,8 @@ recipe = (
     | StoreToZarr(
         store_name='us-ssebop.zarr',
         combine_dims=pattern.combine_dim_keys,
-        target_chunks={'time': 50, 'lat': int(2834 / 280), 'lon': int(6612 / 660)},
+        # time chunk must equal 1 for now
+        # https://github.com/pangeo-forge/pangeo-forge-recipes/issues/520
+        target_chunks={'time': 1, 'lat': int(2834 / 280), 'lon': int(6612 / 660)},
     )
 )
