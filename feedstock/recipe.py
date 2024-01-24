@@ -26,7 +26,6 @@ def make_url(time: pd.Timestamp) -> str:
 
 pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1))
 
-
 class Preprocess(beam.PTransform):
     """Preprocessor transform."""
 
@@ -64,8 +63,6 @@ recipe = (
     | StoreToZarr(
         store_name='us-ssebop.zarr',
         combine_dims=pattern.combine_dim_keys,
-        # time chunk must equal 1 for now
-        # https://github.com/pangeo-forge/pangeo-forge-recipes/issues/520
-        target_chunks={'time': 1, 'lat': int(2834 / 280), 'lon': int(6612 / 660)},
+        target_chunks={'time': 1, 'lat': int(2834 / 2), 'lon': int(6612 / 6)},
     )
 )
