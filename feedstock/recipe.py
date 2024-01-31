@@ -54,7 +54,7 @@ class Preprocess(beam.PTransform):
     def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
         return pcoll | beam.Map(self._preproc)
 
-#| OpenWithXarray(file_type=pattern.file_type, xarray_open_kwargs={engine:"rasterio"})
+#| OpenWithXarray(file_type=pattern.file_type, xarray_open_kwargs={'engine': 'rasterio'})
 recipe = (
     beam.Create(pattern.items())
     | OpenURLWithFSSpec(open_kwargs={'compression': 'zip'})
