@@ -65,6 +65,6 @@ recipe = (
     | StoreToZarr(
         store_name='us-ssebop.zarr',
         combine_dims=pattern.combine_dim_keys,
-        target_chunks={'time': int(8316 / 1), 'lat': int(2834 / 26), 'lon': int(6612 / 58)}, #84
+        target_chunks={'time': 1, 'lat': int(2834 / 26), 'lon': int(6612 / 58)}, #time: int(8316/84)
     )
 )
