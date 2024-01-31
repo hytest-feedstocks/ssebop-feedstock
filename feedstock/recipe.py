@@ -5,14 +5,12 @@ import pandas as pd
 import xarray as xr
 
 from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
-from pangeo_forge_recipes.transforms import Indexed, StoreToZarr, T
+from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, StoreToZarr, T
 
 input_url_pattern = (
-    'zip+'
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
     'conus/eta/modis_eta/daily/downloads/'
     'det{yyyyjjj}.modisSSEBopETactual.zip'
-    '!/det{yyyyjjj}.modisSSEBopETactual.tif'
 )
 
 start = date(2000, 1, 1)
@@ -39,7 +37,7 @@ class Preprocess(beam.PTransform):
         time_index = index[time_dim].value
         time = dates[time_index]
 
-        da = rioxarray.open_rasterio(url).drop('band')
+        da = rioxarray.open_rasterio(f.open()).drop('band')
         da = da.rename({'x': 'lon', 'y': 'lat'})
         ds = da.to_dataset(name='aet')
         ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
@@ -59,6 +57,7 @@ class Preprocess(beam.PTransform):
 
 recipe = (
     beam.Create(pattern.items())
+    | OpenURLWithFSSpec(max_concurrency=10, open_kwargs={'compression': 'zip'})
     | Preprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
