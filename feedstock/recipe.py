@@ -22,7 +22,8 @@ def make_url(time: pd.Timestamp) -> str:
     return input_url_pattern.format(yyyyjjj=time.strftime('%Y%j'))
 
 
-pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1), file_type='tiff')
+#pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1), file_type='tiff') # test if this is confused by .zip
+pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1))
 
 class Preprocess(beam.PTransform):
     """Preprocessor transform."""
@@ -53,11 +54,11 @@ class Preprocess(beam.PTransform):
     def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
         return pcoll | beam.Map(self._preproc)
 
-
+#| OpenWithXarray(file_type=pattern.file_type, xarray_open_kwargs={engine:"rasterio"})
 recipe = (
     beam.Create(pattern.items())
     | OpenURLWithFSSpec(open_kwargs={'compression': 'zip'})
-    | OpenWithXarray(file_type=pattern.file_type)
+    | OpenWithXarray(xarray_open_kwargs={engine:"rasterio"})
     | Preprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
