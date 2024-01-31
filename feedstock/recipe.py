@@ -57,7 +57,7 @@ class Preprocess(beam.PTransform):
 recipe = (
     beam.Create(pattern.items())
     | OpenURLWithFSSpec(open_kwargs={'compression': 'zip'})
-    | OpenWithXarray(file_type=pattern.file_type, xarray_open_kwargs={'engine':'rasterio'})
+    | OpenWithXarray(file_type=pattern.file_type)
     | Preprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
