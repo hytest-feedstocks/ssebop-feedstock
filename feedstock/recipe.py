@@ -31,8 +31,6 @@ class Preprocess(beam.PTransform):
     #def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
     def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
-        import rioxarray
-        #import pdb; pdb.set_trace()
         index, url = item
         print('INDEX')
         print(index)
@@ -41,7 +39,7 @@ class Preprocess(beam.PTransform):
         time_index = index[time_dim].value
         time = dates[time_index]
 
-        da = rioxarray.open_rasterio(f.open()).drop('band')
+        import pdb; pdb.set_trace()
         da = da.rename({'x': 'lon', 'y': 'lat'})
         ds = da.to_dataset(name='aet')
         ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
