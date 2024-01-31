@@ -8,10 +8,13 @@ from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
 from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
 
 input_url_pattern = (
+    'zip+'
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
     'conus/eta/modis_eta/daily/downloads/'
     'det{yyyyjjj}.modisSSEBopETactual.zip'
+    '!/det{yyyyjjj}.modisSSEBopETactual.tif'
 )
+
 
 start = date(2000, 1, 1)
 end = date(2022, 10, 7)
@@ -57,13 +60,13 @@ class Preprocess(beam.PTransform):
 #| OpenWithXarray(file_type=pattern.file_type, xarray_open_kwargs={'engine': 'rasterio'})
 recipe = (
     beam.Create(pattern.items())
-    | OpenURLWithFSSpec(open_kwargs={'compression': 'zip'})
+    #| OpenURLWithFSSpec(open_kwargs={'compression': 'zip'})
     | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
     | Preprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
         combine_dims=pattern.combine_dim_keys,
         #target_chunks={'time': int(8316/84), 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
-        target_chunks={'time': 1, 'lat': 1, 'lon': 1},
+        target_chunks={'time': 1, 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
     )
 )
