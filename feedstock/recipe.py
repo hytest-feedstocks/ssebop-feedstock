@@ -5,7 +5,7 @@ import pandas as pd
 import xarray as xr
 
 from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
-from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, StoreToZarr, T
+from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
 
 input_url_pattern = (
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
