@@ -28,7 +28,6 @@ class Preprocess(beam.PTransform):
     """Preprocessor transform."""
 
     @staticmethod
-    #def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
     def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
         index, ds = item
