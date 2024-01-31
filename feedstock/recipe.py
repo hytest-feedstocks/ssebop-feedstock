@@ -32,23 +32,21 @@ class Preprocess(beam.PTransform):
     def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
         index, ds = item
-        print('INDEX')
-        print(index)
-        print(ds)
+ 
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
         time = dates[time_index]
 
         ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_data': 'aet'})
         ds = ds.drop('band')
-        #ds = da.to_dataset(name='aet')
+        
         ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
-        ds['aet'].assign_attrs(
-            scale_factor = 1/1000,
-            units = 'mm',
-            long_name = 'SSEBOP Actual ET (ETa)',
-            standard_name = 'ETa',
-        )
+        #ds['aet'].assign_attrs(
+        #    scale_factor = 1/1000,
+        #    units = 'mm',
+        #    long_name = 'SSEBOP Actual ET (ETa)',
+        #    standard_name = 'ETa',
+        #)
         ds = ds.expand_dims(time=np.array([time]))
 
         return index, ds
