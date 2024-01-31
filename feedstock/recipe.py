@@ -32,8 +32,11 @@ class Preprocess(beam.PTransform):
     def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
         import rioxarray
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         index, url = item
+        print('INDEX')
+        print(index)
+        print(url)
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
         time = dates[time_index]
