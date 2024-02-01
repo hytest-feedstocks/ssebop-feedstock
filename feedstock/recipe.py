@@ -33,6 +33,7 @@ pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_fi
 class UnzipFSSpec(beam.PTransform):
     @staticmethod
     def _preproc(item: Indexed[T]) -> Indexed[T]:
+        from fsspec.compression import unzip
         index, of = item
         filename = '{index}.tiff'.format(index)
         with of.open() as f:
