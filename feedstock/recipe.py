@@ -37,6 +37,7 @@ class UnzipFSSpec(beam.PTransform):
         index, of = item
         print(index)
         filename = '{index}.tiff'.format(index=index)
+        import pdb; pdb.set_trace()
         with of.open() as f:
             zf = unzip(f)
             #buf = unzip(f).read()
