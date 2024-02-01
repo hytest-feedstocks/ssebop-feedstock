@@ -28,18 +28,26 @@ def make_url(time: pd.Timestamp) -> str:
 #pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1), file_type='tiff') # test if this is confused by .zip
 pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1))
 
+class UnzipFSSpec(beam.PTransform):
+    @staticmethod
+    def _preproc(item: Indexed[T]) -> Indexed[T]:
+        index, f = item
+        
+    
 class Preprocess(beam.PTransform):
     """Preprocessor transform."""
 
     @staticmethod
     def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
-        index, ds = item
- 
+        index, f = item
+
+        xr.open_dataset(f
+
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
         time = dates[time_index]
-
+        
         ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_data': 'aet'})
         ds = ds.drop('band')
         
@@ -61,7 +69,7 @@ class Preprocess(beam.PTransform):
 recipe = (
     beam.Create(pattern.items())
     | OpenURLWithFSSpec() #open_kwargs={'compression': 'zip'})
-    | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
+    #| OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
     | Preprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
