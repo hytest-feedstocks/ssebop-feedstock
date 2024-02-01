@@ -70,3 +70,4 @@ recipe = (
         target_chunks={'time': 1, 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
     )
 )
+# | beam.Map(test_ds) # can we assign attributes after StoreToZarr
