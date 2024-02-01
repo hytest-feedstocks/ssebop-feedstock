@@ -33,7 +33,8 @@ class Preprocess(beam.PTransform):
     def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
         import rioxarray
-
+        import rasterio
+        rasterio.show_versions()
         index, url = item
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
