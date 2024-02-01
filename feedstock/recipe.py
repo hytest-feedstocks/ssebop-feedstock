@@ -43,7 +43,7 @@ class UnzipFSSpec(beam.PTransform):
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
         time = dates[time_index]
-        filename = 'tiff_cache/{index}.tiff'.format(index=time.replace(' ','-'))
+        filename = 'tiff_cache/{index}.tiff'.format(index=time)
         
         buf = unzip(f).read()
 
