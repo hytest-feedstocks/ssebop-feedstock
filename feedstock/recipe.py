@@ -26,8 +26,6 @@ dates = pd.date_range(start, end, freq='1D')
 def make_url(time: pd.Timestamp) -> str:
     return input_url_pattern.format(yyyyjjj=time.strftime('%Y%j'))
 
-
-#pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1), file_type='tiff') # test if this is confused by .zip
 pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1))
 
 class UnzipFSSpec(beam.PTransform):
