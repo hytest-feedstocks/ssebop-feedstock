@@ -33,10 +33,18 @@ pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_fi
 class UnzipFSSpec(beam.PTransform):
     @staticmethod
     def _preproc(item: Indexed[T]) -> Indexed[T]:
+        if not os.path.exists("tiff_cache"): 
+            os.makedirs("tiff_cache") 
+            
         from fsspec.compression import unzip
+        
         index, f = item
-        print(index)
-        filename = '{index}.tiff'.format(index=1)
+        #print(index)
+        time_dim = index.find_concat_dim('time')
+        time_index = index[time_dim].value
+        time = dates[time_index]
+        
+        filename = '{index}.tiff'.format(index=time)
         #import pdb; pdb.set_trace()
         buf = unzip(f).read()
 
