@@ -34,16 +34,14 @@ class UnzipFSSpec(beam.PTransform):
     @staticmethod
     def _preproc(item: Indexed[T]) -> Indexed[T]:
         from fsspec.compression import unzip
-        index, of = item
+        index, f = item
         print(index)
-        filename = '{index}.tiff'.format(index=index)
-        import pdb; pdb.set_trace()
-        with of.open() as f:
-            zf = unzip(f)
-            #buf = unzip(f).read()
-            buf = zf.read()
-            with open(filename, 'wb') as o:
-                o.write(buf)
+        filename = '{index}.tiff'.format(index=1)
+        #import pdb; pdb.set_trace()
+        buf = unzip(f).read()
+
+        with open(filename, 'wb') as o:
+            o.write(buf)
                 
         return index, filename
 
