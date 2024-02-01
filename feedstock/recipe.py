@@ -8,11 +8,11 @@ from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
 from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
 
 input_url_pattern = (
-    'zip+'
+    #'zip+'
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
     'conus/eta/modis_eta/daily/downloads/'
     'det{yyyyjjj}.modisSSEBopETactual.zip'
-    '!/det{yyyyjjj}.modisSSEBopETactual.tif'
+    #'!/det{yyyyjjj}.modisSSEBopETactual.tif'
 )
 
 
@@ -60,7 +60,7 @@ class Preprocess(beam.PTransform):
 #| OpenWithXarray(file_type=pattern.file_type, xarray_open_kwargs={'engine': 'rasterio'})
 recipe = (
     beam.Create(pattern.items())
-    | OpenURLWithFSSpec(max_concurrency=10)
+    | OpenURLWithFSSpec(open_kwargs={'compression': 'zip'})
     | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
     | Preprocess()
     | StoreToZarr(
