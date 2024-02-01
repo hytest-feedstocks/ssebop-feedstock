@@ -1,3 +1,5 @@
+# FAILS
+
 from datetime import date
 
 import apache_beam as beam
