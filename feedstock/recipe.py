@@ -1,3 +1,6 @@
+# this version caches data but as tiff's that are incorrectly given a .zip extension.
+# Also fails on a rerun if the cache is already populated.
+
 from datetime import date
 
 import apache_beam as beam
