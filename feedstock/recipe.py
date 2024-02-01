@@ -40,13 +40,11 @@ class UnzipFSSpec(beam.PTransform):
             os.makedirs("tiff_cache") 
         
         index, f = item
-        #print(index)
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
         time = dates[time_index]
-        
         filename = '{index}.tiff'.format(index=time)
-        #import pdb; pdb.set_trace()
+        
         buf = unzip(f).read()
 
         with open(filename, 'wb') as o:
