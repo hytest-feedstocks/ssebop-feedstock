@@ -31,7 +31,14 @@ pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_fi
 class UnzipFSSpec(beam.PTransform):
     @staticmethod
     def _preproc(item: Indexed[T]) -> Indexed[T]:
-        index, f = item
+        index, of = item
+        filename = '{index}.tiff'.format(index)
+        with of.open() as f:
+            buf = unzip(f).read()
+            with open(filename, 'wb') as o:
+                o.write(buf)
+                
+        return index, filename
         
     
 class Preprocess(beam.PTransform):
@@ -40,14 +47,12 @@ class Preprocess(beam.PTransform):
     @staticmethod
     def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
-        index, f = item
-
-        xr.open_dataset(f
+        index, ds = item
 
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
         time = dates[time_index]
-        
+
         ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_data': 'aet'})
         ds = ds.drop('band')
         
@@ -69,7 +74,8 @@ class Preprocess(beam.PTransform):
 recipe = (
     beam.Create(pattern.items())
     | OpenURLWithFSSpec() #open_kwargs={'compression': 'zip'})
-    #| OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
+    | UnzipFSSpec()
+    | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
     | Preprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
