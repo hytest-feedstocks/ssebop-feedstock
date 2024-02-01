@@ -8,11 +8,11 @@ from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
 from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
 
 input_url_pattern = (
-    'zip+'
+    #'zip+'
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
     'conus/eta/modis_eta/daily/downloads/'
     'det{yyyyjjj}.modisSSEBopETactual.zip'
-    '!/det{yyyyjjj}.modisSSEBopETactual.tif'
+    #'!/det{yyyyjjj}.modisSSEBopETactual.tif'
 )
 
 
