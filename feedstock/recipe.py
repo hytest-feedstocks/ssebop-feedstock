@@ -42,8 +42,11 @@ class UnzipFSSpec(beam.PTransform):
                 o.write(buf)
                 
         return index, filename
-        
-    
+
+    def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
+        return pcoll | beam.Map(self._preproc)
+
+
 class Preprocess(beam.PTransform):
     """Preprocessor transform."""
 
