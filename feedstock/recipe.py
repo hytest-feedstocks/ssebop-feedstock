@@ -35,6 +35,7 @@ class Preprocess(beam.PTransform):
     @staticmethod
     def _preproc(item: Indexed[T]) -> Indexed[T]:
         import io
+        from fsspec.implementations.zip import ZipFileSystem
         index, f = item
 
         zf = ZipFileSystem(f)
