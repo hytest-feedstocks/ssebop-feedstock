@@ -46,10 +46,10 @@ class Preprocess(beam.PTransform):
 
 
 class Postprocess(beam.PTransform):
-    """Preprocessor transform."""
+    """Postprocessor transform."""
 
     @staticmethod
-    def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
+    def _postproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
         index, ds = item
  
@@ -72,7 +72,7 @@ class Postprocess(beam.PTransform):
         return index, ds
 
     def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
-        return pcoll | beam.Map(self._preproc)
+        return pcoll | beam.Map(self._postproc)
 
 recipe = (
     beam.Create(pattern.items())
