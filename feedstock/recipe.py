@@ -1,6 +1,3 @@
-# FAILS
-# AttributeError: 'ZipExtFile' object has no attribute 'size' [while running 'Create|OpenURLWithFSSpec|OpenWithXarray|Preprocess|StoreToZarr/OpenURLWithFSSpec/MapWithConcurrencyLimit/open_url']
-
 from datetime import date
 
 import apache_beam as beam
