@@ -1,3 +1,6 @@
+# FAILS
+# AttributeError: 'ZipExtFile' object has no attribute 'size' [while running 'Create|OpenURLWithFSSpec|OpenWithXarray|Preprocess|StoreToZarr/OpenURLWithFSSpec/MapWithConcurrencyLimit/open_url']
+
 from datetime import date
 
 import apache_beam as beam
@@ -5,14 +8,12 @@ import pandas as pd
 import xarray as xr
 
 from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
-from pangeo_forge_recipes.transforms import Indexed, StoreToZarr, T
+from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
 
 input_url_pattern = (
-    'zip+'
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
     'conus/eta/modis_eta/daily/downloads/'
     'det{yyyyjjj}.modisSSEBopETactual.zip'
-    '!/det{yyyyjjj}.modisSSEBopETactual.tif'
 )
 
 start = date(2000, 1, 1)
@@ -24,25 +25,46 @@ def make_url(time: pd.Timestamp) -> str:
     return input_url_pattern.format(yyyyjjj=time.strftime('%Y%j'))
 
 
+#pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1), file_type='tiff') # test if this is confused by .zip
 pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1))
+
 
 class Preprocess(beam.PTransform):
     """Preprocessor transform."""
 
     @staticmethod
-    def _preproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
+    def _preproc(item: Indexed[T]) -> Indexed[T]:
+        import io
+        from fsspec.implementations.zip import ZipFileSystem
+        index, f = item
+
+        zf = ZipFileSystem(f)
+        zip_tiff = zf.open(zf.glob('*.tif')[0])
+        
+        #tiff_bytes_io = io.BytesIO(f.open().read())
+        tiff_bytes_io = io.BytesIO(zip_tiff.read())
+
+        return index, tiff_bytes_io
+
+    def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
+        return pcoll | beam.Map(self._preproc)
+
+
+class Postprocess(beam.PTransform):
+    """Postprocessor transform."""
+
+    @staticmethod
+    def _postproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
         import numpy as np
-        import rioxarray
-        import rasterio
-        rasterio.show_versions()
-        index, url = item
+        index, ds = item
+ 
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
         time = dates[time_index]
 
-        da = rioxarray.open_rasterio(url).drop('band')
-        da = da.rename({'x': 'lon', 'y': 'lat'})
-        ds = da.to_dataset(name='aet')
+        ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_data': 'aet'})
+        ds = ds.drop('band')
+        
         ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
         ds['aet'].assign_attrs(
             scale_factor = 1/1000,
@@ -55,12 +77,14 @@ class Preprocess(beam.PTransform):
         return index, ds
 
     def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
-        return pcoll | beam.Map(self._preproc)
-
+        return pcoll | beam.Map(self._postproc)
 
 recipe = (
     beam.Create(pattern.items())
+    | OpenURLWithFSSpec()
     | Preprocess()
+    | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
+    | Postprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
         combine_dims=pattern.combine_dim_keys,
