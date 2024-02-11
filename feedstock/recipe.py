@@ -11,6 +11,7 @@ from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
 from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
 
 input_url_pattern = (
+    'zip://*.tif::'
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
     'conus/eta/modis_eta/daily/downloads/'
     'det{yyyyjjj}.modisSSEBopETactual.zip'
@@ -28,7 +29,23 @@ def make_url(time: pd.Timestamp) -> str:
 #pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1), file_type='tiff') # test if this is confused by .zip
 pattern = FilePattern(make_url, ConcatDim(name='time', keys=dates, nitems_per_file=1))
 
+
 class Preprocess(beam.PTransform):
+    """Preprocessor transform."""
+
+    @staticmethod
+    def _preproc(item: Indexed[T]) -> Indexed[T]:
+        import io
+        index, f = item
+        tiff_bytes_io = io.BytesIO(f.open().read())
+
+        return index, tiff_bytes_io
+
+    def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
+        return pcoll | beam.Map(self._preproc)
+
+
+class Postprocess(beam.PTransform):
     """Preprocessor transform."""
 
     @staticmethod
@@ -57,16 +74,16 @@ class Preprocess(beam.PTransform):
     def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
         return pcoll | beam.Map(self._preproc)
 
-#| OpenWithXarray(file_type=pattern.file_type, xarray_open_kwargs={'engine': 'rasterio'})
 recipe = (
     beam.Create(pattern.items())
-    | OpenURLWithFSSpec(open_kwargs={'compression': 'zip'})
+    | OpenURLWithFSSpec()
+    | Postprocess()
     | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
-    | Preprocess()
+    | Postprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
         combine_dims=pattern.combine_dim_keys,
         #target_chunks={'time': int(8316/84), 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
-        target_chunks={'time': 1, 'lat': 1, 'lon': 1},
+        target_chunks={'time': 1, 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
     )
 )
