@@ -37,7 +37,8 @@ class Preprocess(beam.PTransform):
     def _preproc(item: Indexed[T]) -> Indexed[T]:
         import io
         index, f = item
-        tiff_bytes_io = io.BytesIO(f.open().read())
+        #tiff_bytes_io = io.BytesIO(f.open().read())
+        tiff_bytes_io = io.BytesIO(f.read())
 
         return index, tiff_bytes_io
 
