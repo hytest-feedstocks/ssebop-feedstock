@@ -11,7 +11,6 @@ from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
 from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
 
 input_url_pattern = (
-    'zip://*.tif::'
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
     'conus/eta/modis_eta/daily/downloads/'
     'det{yyyyjjj}.modisSSEBopETactual.zip'
@@ -37,8 +36,12 @@ class Preprocess(beam.PTransform):
     def _preproc(item: Indexed[T]) -> Indexed[T]:
         import io
         index, f = item
+
+        zf = ZipFileSystem(f)
+        zip_tiff = zf.open(zf.glob('*.tif')[0])
+        
         #tiff_bytes_io = io.BytesIO(f.open().read())
-        tiff_bytes_io = io.BytesIO(f.read())
+        tiff_bytes_io = io.BytesIO(zip_tiff.read())
 
         return index, tiff_bytes_io
 
