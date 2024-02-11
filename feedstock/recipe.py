@@ -62,8 +62,9 @@ class Postprocess(beam.PTransform):
         ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_data': 'aet'})
         ds = ds.drop('band')
         
-        ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
+        #ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
         ds['aet'].assign_attrs(
+            _FillValue = 9999,
             scale_factor = 1/1000,
             units = 'mm',
             long_name = 'SSEBOP Actual ET (ETa)',
