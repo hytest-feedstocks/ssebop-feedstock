@@ -66,12 +66,12 @@ class Postprocess(beam.PTransform):
         ds = ds.drop('band')
         
         ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
-        #ds['aet'].assign_attrs(
-        #    scale_factor = 1/1000,
-        #    units = 'mm',
-        #    long_name = 'SSEBOP Actual ET (ETa)',
-        #    standard_name = 'ETa',
-        #)
+        ds['aet'].assign_attrs(
+            scale_factor = 1/1000,
+            units = 'mm',
+            long_name = 'SSEBOP Actual ET (ETa)',
+            standard_name = 'ETa',
+        )
         ds = ds.expand_dims(time=np.array([time]))
 
         return index, ds
@@ -88,7 +88,7 @@ recipe = (
     | StoreToZarr(
         store_name='us-ssebop.zarr',
         combine_dims=pattern.combine_dim_keys,
-        #target_chunks={'time': int(8316/84), 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
+        #target_chunks={'time': int(8316 / 84), 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
         target_chunks={'time': 1, 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
     )
 )
