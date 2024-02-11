@@ -77,7 +77,7 @@ class Postprocess(beam.PTransform):
 recipe = (
     beam.Create(pattern.items())
     | OpenURLWithFSSpec()
-    | Postprocess()
+    | Preprocess()
     | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
     | Postprocess()
     | StoreToZarr(
