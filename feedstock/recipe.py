@@ -60,7 +60,7 @@ class Postprocess(beam.PTransform):
         time = dates[time_index]
 
         ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_data': 'aet'})
-        ds = ds.drop('band')
+        ds = ds.drop_vars(['band','spatial_ref'])
         
         #ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
         ds['aet'].assign_attrs(
