@@ -33,34 +33,25 @@ class Preprocess(beam.PTransform):
     def _preproc(item: Indexed[T]) -> Indexed[T]:
         import io
         from fsspec.implementations.zip import ZipFileSystem
+        # postprocessing
+        import rioxarray
+        import numpy as np
+        
         index, f = item
 
         zf = ZipFileSystem(f)
         zip_tiff = zf.open(zf.glob('*.tif')[0])
         
-        #tiff_bytes_io = io.BytesIO(f.open().read())
         tiff_bytes_io = io.BytesIO(zip_tiff.read())
 
-        return index, tiff_bytes_io
-
-    def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
-        return pcoll | beam.Map(self._preproc)
-
-
-class Postprocess(beam.PTransform):
-    """Postprocessor transform."""
-
-    @staticmethod
-    def _postproc(item: Indexed[T]) -> Indexed[xr.Dataset]:
-        import numpy as np
-        index, ds = item
+        #return index, tiff_bytes_io
+        # post processing
  
         time_dim = index.find_concat_dim('time')
         time_index = index[time_dim].value
         time = dates[time_index]
-
-        ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_data': 'aet'})
-        ds = ds.drop_dims('band')
+        ds = rioxarray.open_rasterio(tiff_bytes_io, band_as_variable=True)
+        ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_1': 'aet'})
         
         #ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
         ds['aet'].assign_attrs(
@@ -81,8 +72,6 @@ recipe = (
     beam.Create(pattern.items())
     | OpenURLWithFSSpec()
     | Preprocess()
-    | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
-    | Postprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
         combine_dims=pattern.combine_dim_keys,
