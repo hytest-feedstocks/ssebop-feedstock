@@ -59,8 +59,7 @@ class Postprocess(beam.PTransform):
         time_index = index[time_dim].value
         time = dates[time_index]
 
-        ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_data': 'aet'})
-        ds = ds.drop_dims('band')
+        ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_1': 'aet'})
         
         #ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
         ds['aet'].assign_attrs(
@@ -81,7 +80,7 @@ recipe = (
     beam.Create(pattern.items())
     | OpenURLWithFSSpec()
     | Preprocess()
-    | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio'})
+    | OpenWithXarray(xarray_open_kwargs={'engine': 'rasterio', 'band_as_variable': True})
     | Postprocess()
     | StoreToZarr(
         store_name='us-ssebop.zarr',
