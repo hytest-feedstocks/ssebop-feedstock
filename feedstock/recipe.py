@@ -66,7 +66,7 @@ class Preprocess(beam.PTransform):
         return index, ds
 
     def expand(self, pcoll: beam.PCollection) -> beam.PCollection:
-        return pcoll | beam.Map(self._postproc)
+        return pcoll | beam.Map(self._preproc)
 
 recipe = (
     beam.Create(pattern.items())
