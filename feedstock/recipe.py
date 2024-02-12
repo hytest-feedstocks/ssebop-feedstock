@@ -5,7 +5,7 @@ import pandas as pd
 import xarray as xr
 
 from pangeo_forge_recipes.patterns import ConcatDim, FilePattern
-from pangeo_forge_recipes.transforms import Indexed, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
+from pangeo_forge_recipes.transforms import Indexed, ConsolidateMetadata, OpenURLWithFSSpec, OpenWithXarray, StoreToZarr, T
 
 input_url_pattern = (
     'https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/'
@@ -52,16 +52,37 @@ class Preprocess(beam.PTransform):
         time = dates[time_index]
         ds = rioxarray.open_rasterio(tiff_bytes_io, band_as_variable=True)
         ds = ds.rename({'x': 'lon', 'y': 'lat', 'band_1': 'aet'})
-        
+        ds = ds.assign_coords(time=time).expand_dims(dim="time")
+
+        # Save monthly compiled dataset
         #ds['aet'] = ds['aet'].where(ds['aet'] != 9999)
-        ds['aet'].assign_attrs(
-            _FillValue = 9999,
-            scale_factor = 1/1000,
-            units = 'mm',
-            long_name = 'SSEBOP Actual ET (ETa)',
-            standard_name = 'ETa',
+        ds['aet'].attrs = {}
+        ds['aet'] = ds['aet'].assign_attrs(
+             _FillValue = 9999,
+             #scale_factor = 0.001, # not working with recipes, might need to set at a later step
+             units = 'mm',
+             long_name = 'SSEBOP Actual ET (ETa)',
+             standard_name = 'ETa',
+         )
+
+        ds['lon'] = ds['lon'].assign_attrs(
+             units = 'degree_east',
+             standard_name = 'longitude',
+             description = 'Longitude of the center of the grid cell',
+             axis ='Y',
         )
-        ds = ds.expand_dims(time=np.array([time]))
+
+        ds['lat'] = ds['lat'].assign_attrs(
+             units = 'degree_north',
+             standard_name = 'latitude',
+             description = 'Latitude of the center of the grid cell',
+             axis ='X',
+        )
+
+        ds['time'] = ds['time'].assign_attrs(
+             standard_name = 'date',
+             axis ='T',
+        )
 
         return index, ds
 
@@ -73,9 +94,10 @@ recipe = (
     | OpenURLWithFSSpec()
     | Preprocess()
     | StoreToZarr(
-        store_name='us-ssebop.zarr',
+        store_name='ssebop-us.zarr',
         combine_dims=pattern.combine_dim_keys,
         #target_chunks={'time': int(8316 / 84), 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
         target_chunks={'time': 1, 'lat': int(2834 / 26), 'lon': int(6612 / 58)},
     )
+    | ConsolidateMetadata()
 )
